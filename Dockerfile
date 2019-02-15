@@ -1,8 +1,7 @@
 FROM golang:1.11.1-stretch AS builder
 MAINTAINER Filecoin Dev Team
 
-RUN apt-get update && apt-get install -y ca-certificates file sudo clang
-RUN curl -sSf https://sh.rustup.rs | sh -s -- -y
+RUN apt-get update && apt-get install -y ca-certificates file sudo
 
 # This docker file is a modified version of
 # https://github.com/ipfs/go-ipfs/blob/master/Dockerfile
@@ -11,17 +10,6 @@ RUN curl -sSf https://sh.rustup.rs | sh -s -- -y
 ENV SRC_DIR /go/src/github.com/filecoin-project/go-filecoin
 
 COPY . $SRC_DIR
-
-# Build the thing.
-RUN cd $SRC_DIR \
-&& . $HOME/.cargo/env \
-&& go run ./build/*go deps \
-&& go run ./build/*go build \
-&& go build -o ./faucet ./tools/faucet/main.go \
-&& go build -o ./genesis-file-server ./tools/genesis-file-server/main.go
-
-# Build gengen
-RUN cd
 
 # Get su-exec, a very minimal tool for dropping privileges,
 # and tini, a very minimal init daemon for containers
