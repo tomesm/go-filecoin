@@ -247,7 +247,7 @@ func RunCreateMiner(t *testing.T, node *Node, from address.Address, pledge uint6
 
 	wg.Add(1)
 
-	subscription, err := node.PubSub.Subscribe(msg.Topic)
+	subscription, err := node.PorcelainAPI.PubSubSubscribe(msg.Topic)
 	require.NoError(err)
 
 	go func() {
