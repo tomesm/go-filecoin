@@ -16,7 +16,6 @@ import (
 	"github.com/filecoin-project/go-filecoin/mining"
 	"github.com/filecoin-project/go-filecoin/plumbing"
 	pbConfig "github.com/filecoin-project/go-filecoin/plumbing/cfg"
-	"github.com/filecoin-project/go-filecoin/plumbing/chn"
 	"github.com/filecoin-project/go-filecoin/plumbing/msg"
 	"github.com/filecoin-project/go-filecoin/plumbing/mthdsig"
 	"github.com/filecoin-project/go-filecoin/plumbing/ntwk"
@@ -166,7 +165,7 @@ func TestNodeStartMining(t *testing.T) {
 		MsgSender:    msg.NewSender(minerNode.Repo, minerNode.Wallet, minerNode.ChainReader, minerNode.MsgPool, minerNode.PubSub.Publish),
 		MsgWaiter:    msg.NewWaiter(minerNode.ChainReader, minerNode.Blockstore, minerNode.CborStore()),
 		Config:       pbConfig.NewConfig(minerNode.Repo),
-		Chain:        chn.New(minerNode.ChainReader),
+		Chain:        minerNode.ChainReader,
 		Network:      ntwk.NewNetwork(minerNode.Host()),
 		Wallet:       wallet.New(walletBackend),
 	})
