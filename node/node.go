@@ -121,8 +121,8 @@ type Node struct {
 	RetrievalMiner  *retrieval.Miner
 
 	// Network Fields
-	BlockSub     *pubsub.Subscription
-	MessageSub   *pubsub.Subscription
+	BlockSub     ps.Subscription
+	MessageSub   ps.Subscription
 	Ping         *ping.PingService
 	HelloSvc     *hello.Handler
 	Bootstrapper *filnet.Bootstrapper
@@ -405,7 +405,7 @@ func (nc *Config) Build(ctx context.Context) (*Node, error) {
 	PorcelainAPI := porcelain.New(plumbing.New(&plumbing.APIDeps{
 		Chain:        chn.New(chainReader),
 		Config:       cfg.NewConfig(nc.Repo),
-		MessagePool:  msgPool,
+		MsgPool:      msgPool,
 		MsgPreviewer: msg.NewPreviewer(fcWallet, chainReader, &cstOffline, bs),
 		MsgQueryer:   msg.NewQueryer(nc.Repo, fcWallet, chainReader, &cstOffline, bs),
 		MsgSender:    msg.NewSender(nc.Repo, fcWallet, chainReader, msgPool, fsub.Publish),
@@ -1083,7 +1083,7 @@ func (node *Node) BlockHeight() (*types.BlockHeight, error) {
 	return types.NewBlockHeight(height), nil
 }
 
-func (node *Node) handleSubscription(ctx context.Context, f pubSubProcessorFunc, fname string, s *pubsub.Subscription, sname string) {
+func (node *Node) handleSubscription(ctx context.Context, f pubSubProcessorFunc, fname string, s ps.Subscription, sname string) {
 	for {
 		pubSubMsg, err := s.Next(ctx)
 		if err != nil {

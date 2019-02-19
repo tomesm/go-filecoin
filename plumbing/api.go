@@ -31,7 +31,7 @@ type API struct {
 
 	chain        *chn.Reader
 	config       *cfg.Config
-	messagePool  *core.MessagePool
+	msgPool      *core.MessagePool
 	msgPreviewer *msg.Previewer
 	msgQueryer   *msg.Queryer
 	msgSender    *msg.Sender
@@ -47,7 +47,7 @@ type API struct {
 type APIDeps struct {
 	Chain        *chn.Reader
 	Config       *cfg.Config
-	MessagePool  *core.MessagePool
+	MsgPool      *core.MessagePool
 	MsgPreviewer *msg.Previewer
 	MsgQueryer   *msg.Queryer
 	MsgSender    *msg.Sender
@@ -55,6 +55,7 @@ type APIDeps struct {
 	Subscriber   *ps.Subscriber
 	Publisher    *ps.Publisher
 	Network      *ntwk.Network
+	Pubsub       *pubsub.PubSub
 	SigGetter    *mthdsig.Getter
 	Wallet       *wallet.Wallet
 }
@@ -66,7 +67,7 @@ func New(deps *APIDeps) *API {
 
 		chain:        deps.Chain,
 		config:       deps.Config,
-		messagePool:  deps.MessagePool,
+		msgPool:      deps.MsgPool,
 		msgPreviewer: deps.MsgPreviewer,
 		msgQueryer:   deps.MsgQueryer,
 		msgSender:    deps.MsgSender,
@@ -117,9 +118,14 @@ func (api *API) BlockGet(ctx context.Context, id cid.Cid) (*types.Block, error) 
 	return api.chain.BlockGet(ctx, id)
 }
 
+// MessagePoolPending lists messages un-mined in the pool
+func (api *API) MessagePoolPending() []*types.SignedMessage {
+	return api.msgPool.Pending()
+}
+
 // MessagePoolRemove removes a message from the message pool
 func (api *API) MessagePoolRemove(cid cid.Cid) {
-	api.messagePool.Remove(cid)
+	api.msgPool.Remove(cid)
 }
 
 // MessagePreview previews the Gas cost of a message by running it locally on the client and
@@ -154,7 +160,7 @@ func (api *API) MessageWait(ctx context.Context, msgCid cid.Cid, cb func(*types.
 }
 
 // PubSubSubscribe subscribes to a libp2p topic
-func (api *API) PubSubSubscribe(topic string, opts ...pubsub.SubOpt) (*pubsub.Subscription, error) {
+func (api *API) PubSubSubscribe(topic string, opts ...pubsub.SubOpt) (ps.Subscription, error) {
 	return api.subscriber.Subscribe(topic, opts...)
 }
 
