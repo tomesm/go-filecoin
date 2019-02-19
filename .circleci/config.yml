@@ -327,6 +327,7 @@ jobs:
           name: build an image of all binaries
           command: |
             tar -xf filecoin-Linux.tar.gz
+            ln -s /home/filecoin-proof-parameters ./filecoin-proof-parameters
             docker build -t filecoin:all --target=builder .
           no_output_timeout: 20m
 
