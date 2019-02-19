@@ -280,9 +280,15 @@ jobs:
     working_directory: /go/src/github.com/filecoin-project/go-filecoin
     resource_class: small
     steps:
-      - command: |
-          go build -o ./faucet ./tools/faucet/main.go
-          go build -o ./genesis-file-server ./tools/genesis-file-server/main.go
+      - add_ssh_keys:
+          fingerprints:
+            - "1e:73:c5:15:75:e0:e4:98:54:3c:2b:9e:e8:94:14:2e"
+      - checkout
+      - run:
+          name: build faucet and genesis-file-server
+          command: |
+            go build -o ./faucet ./tools/faucet/main.go
+            go build -o ./genesis-file-server ./tools/genesis-file-server/main.go
 
       - persist_to_workspace:
           root: "."
@@ -437,11 +443,11 @@ workflows:
   test_all:
     jobs:
       - build_linux
-      - build_faucet_and_genesis:
-          filters:
-            branches:
-              only:
-                - master
+      - build_faucet_and_genesis
+#          filters:
+#            branches:
+#              only:
+#                - master
       - build_docker_img:
           requires:
             - build_linux
