@@ -1,5 +1,11 @@
 version: 2
 
+definitions:
+  steps:
+    - run: &rust_proofs_checksum
+        name: generate rust proofs checksum
+        command: git rev-parse @:./proofs/rust-proofs > /tmp/rust-proofs-checksum.txt
+
 jobs:
   build_macos:
     macos:
@@ -21,8 +27,7 @@ jobs:
       - run:
           name: Update submodules
           command: git submodule update --init
-      - run:
-          command: git rev-parse @:./proofs/rust-proofs > /tmp/rust-proofs-checksum.txt
+      - run: *rust_proofs_checksum
       - restore_cache:
           key: v5-go-deps-{{ arch }}-{{ checksum  "~/go/src/github.com/filecoin-project/go-filecoin/build/main.go" }}-{{ checksum "~/go/src/github.com/filecoin-project/go-filecoin/package.json" }}-{{ checksum "/tmp/rust-proofs-checksum.txt" }}
 
@@ -142,7 +147,7 @@ jobs:
       - run: git submodule update --init
 
       # Save the Git SHA of the rust-proofs submodule so that we can use it when creating a cache key
-      - run: git rev-parse @:./proofs/rust-proofs > /tmp/rust-proofs-checksum.txt
+      - run: *rust_proofs_checksum
 
       - restore_cache:
           keys:
@@ -309,6 +314,8 @@ jobs:
 
       # The first checkout ensures we have the files needed to restore the cache
       - checkout
+
+      - run: *rust_proofs_checksum
 
       - attach_workspace:
           at: "."
