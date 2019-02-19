@@ -449,7 +449,9 @@ workflows:
   test_all:
     jobs:
       - build_linux
-      - build_faucet_and_genesis
+      - build_faucet_and_genesis:
+          requires:
+            - build_linux
 #          filters:
 #            branches:
 #              only:
