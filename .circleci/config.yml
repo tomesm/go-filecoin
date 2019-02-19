@@ -234,10 +234,6 @@ jobs:
           name: Create linux bundle
           command: ./scripts/build-bundle.sh
 
-      - run:
-          name: Create rust binaries bundle
-          command: cp proofs/
-
       - store_artifacts:
           path: "/go/src/github.com/filecoin-project/go-filecoin/filecoin-Linux.tar.gz"
           destination: filecoin-Linux.tar.gz
@@ -304,12 +300,12 @@ jobs:
           command: |
             sudo apt-get install -y python-pip libyaml-dev python-dev jq
             sudo pip install awscli
- #     - run:
- #         name: login to ECR
- #         command: |
- #           export AWS_ACCESS_KEY_ID=$AWS_ECR_ACCESS_KEY_ID
- #           export AWS_SECRET_ACCESS_KEY=$AWS_ECR_SECRET_ACCESS_KEY
- #           eval $(aws --region us-east-1 ecr --no-include-email get-login)
+      - run:
+          name: login to ECR
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_ECR_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_ECR_SECRET_ACCESS_KEY
+            eval $(aws --region us-east-1 ecr --no-include-email get-login)
 
       # The first checkout ensures we have the files needed to restore the cache
       - checkout
@@ -332,33 +328,33 @@ jobs:
           no_output_timeout: 20m
 
 
-#      - run:
-#          name: build & push image - genesis file server
-#          command: |
-#            export SHORT_GIT_SHA=$(echo $CIRCLE_SHA1 | cut -c -6)
-#            docker build -f Dockerfile.ci.genesis --label "version=$SHORT_GIT_SHA" -t 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:$SHORT_GIT_SHA --cache-from filecoin:all .
-#            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:$SHORT_GIT_SHA
-#            docker tag 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:$SHORT_GIT_SHA 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:latest
-#            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:latest
+      - run:
+          name: build & push image - genesis file server
+          command: |
+            export SHORT_GIT_SHA=$(echo $CIRCLE_SHA1 | cut -c -6)
+            docker build -f Dockerfile.ci.genesis --label "version=$SHORT_GIT_SHA" -t 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:$SHORT_GIT_SHA --cache-from filecoin:all .
+            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:$SHORT_GIT_SHA
+            docker tag 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:$SHORT_GIT_SHA 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:latest
+            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-genesis-file-server:latest
 
-#      - run:
-#          name: build & push image - faucet
-#          command: |
-#            export SHORT_GIT_SHA=$(echo $CIRCLE_SHA1 | cut -c -6)
-#            docker build -f Dockerfile.ci.faucet --label "version=$SHORT_GIT_SHA" -t 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:$SHORT_GIT_SHA --cache-from filecoin:all .
-#            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:$SHORT_GIT_SHA
-#            docker tag 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:$SHORT_GIT_SHA 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:latest
-#            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:latest
+      - run:
+          name: build & push image - faucet
+          command: |
+            export SHORT_GIT_SHA=$(echo $CIRCLE_SHA1 | cut -c -6)
+            docker build -f Dockerfile.ci.faucet --label "version=$SHORT_GIT_SHA" -t 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:$SHORT_GIT_SHA --cache-from filecoin:all .
+            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:$SHORT_GIT_SHA
+            docker tag 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:$SHORT_GIT_SHA 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:latest
+            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin-faucet:latest
 
-#      - run:
-#          name: build & push image - filecoin
-#          command: |
-#            mv $HOME/filecoin-proof-parameters ./filecoin-proof-parameters
-#            export SHORT_GIT_SHA=$(echo $CIRCLE_SHA1 | cut -c -6)
-#            docker build -f Dockerfile.ci.filecoin --label "version=$SHORT_GIT_SHA" -t 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:$SHORT_GIT_SHA --cache-from filecoin:all .
-#            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:$SHORT_GIT_SHA
-#            docker tag 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:$SHORT_GIT_SHA 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:latest
-#            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:latest
+      - run:
+          name: build & push image - filecoin
+          command: |
+            mv $HOME/filecoin-proof-parameters ./filecoin-proof-parameters
+            export SHORT_GIT_SHA=$(echo $CIRCLE_SHA1 | cut -c -6)
+            docker build -f Dockerfile.ci.filecoin --label "version=$SHORT_GIT_SHA" -t 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:$SHORT_GIT_SHA --cache-from filecoin:all .
+            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:$SHORT_GIT_SHA
+            docker tag 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:$SHORT_GIT_SHA 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:latest
+            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:latest
 
   trigger_nightly_devnet_deploy:
     docker:
@@ -444,10 +440,10 @@ workflows:
           requires:
             - build_linux
             - build_faucet_and_genesis
-#          filters:
-#            branches:
-#              only:
-#                - master
+          filters:
+            branches:
+              only:
+                - master
 
   build_nightly_osx:
     triggers:
