@@ -308,6 +308,7 @@ jobs:
     docker:
       - image: circleci/golang:latest
     resource_class: xlarge
+    working_directory: "~/docker_build"
     steps:
       - add_ssh_keys:
           fingerprints:
@@ -344,7 +345,6 @@ jobs:
           name: build an image of all binaries
           command: |
             tar -xf filecoin-Linux.tar.gz
-            ln -s $HOME/filecoin-proof-parameters ./filecoin-proof-parameters
             docker build -t filecoin:all --target=builder .
           no_output_timeout: 20m
 
@@ -369,7 +369,7 @@ jobs:
       - run:
           name: build & push image - filecoin
           command: |
-            mv $HOME/filecoin-proof-parameters ./filecoin-proof-parameters
+            ln -s $HOME/filecoin-proof-parameters ./filecoin-proof-parameters
             export SHORT_GIT_SHA=$(echo $CIRCLE_SHA1 | cut -c -6)
             docker build -f Dockerfile.ci.filecoin --label "version=$SHORT_GIT_SHA" -t 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:$SHORT_GIT_SHA --cache-from filecoin:all .
 #            docker push 657871693752.dkr.ecr.us-east-1.amazonaws.com/filecoin:$SHORT_GIT_SHA
