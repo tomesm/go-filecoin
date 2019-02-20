@@ -28,8 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var ki = types.MustGenerateKeyInfo(10, types.GenerateKeyInfoSeed())
-var mockSigner = types.NewMockSigner(ki)
+var mockSigner, _ = types.NewMockSignersAndKeyInfo(10)
 
 func TestPaymentBrokerGenesis(t *testing.T) {
 	assert := assert.New(t)

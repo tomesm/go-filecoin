@@ -7,8 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var ki = MustGenerateKeyInfo(10, GenerateKeyInfoSeed())
-var mockSigner = NewMockSigner(ki)
+var mockSigner, _ = NewMockSignersAndKeyInfo(10)
 var newSignedMessage = NewSignedMessageForTestGetter(mockSigner)
 
 func TestSignedMessageString(t *testing.T) {

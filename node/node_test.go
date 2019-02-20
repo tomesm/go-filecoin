@@ -32,9 +32,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var seed = types.GenerateKeyInfoSeed()
-var ki = types.MustGenerateKeyInfo(10, seed)
-var mockSigner = types.NewMockSigner(ki)
+var mockSigner, _ = types.NewMockSignersAndKeyInfo(10)
 
 func TestNodeConstruct(t *testing.T) {
 	t.Parallel()

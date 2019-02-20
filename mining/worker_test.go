@@ -10,8 +10,8 @@ import (
 	"gx/ipfs/QmS2aqUZLJp8kF1ihE5rvDGE5LvmKDPnx32w9Z1BW9xLV5/go-ipfs-blockstore"
 	"gx/ipfs/Qmf4xQhNomPNhrtZc67qSnfJSjxjXs9LWvknJtSXwimPrM/go-datastore"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	ast "github.com/stretchr/testify/assert"
+	req "github.com/stretchr/testify/require"
 
 	"github.com/filecoin-project/go-filecoin/actor"
 	"github.com/filecoin-project/go-filecoin/address"
@@ -25,8 +25,8 @@ import (
 )
 
 func Test_Mine(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+	assert := ast.New(t)
+	require := req.New(t)
 
 	var doSomeWorkCalled = false
 	CreatePoSTFunc := func() { doSomeWorkCalled = true }
@@ -104,7 +104,7 @@ func sharedSetupInitial() (*hamt.CborIpldStore, *core.MessagePool, cid.Cid) {
 func sharedSetup(t *testing.T, mockSigner types.MockSigner) (
 	state.Tree, *core.MessagePool, []address.Address, *hamt.CborIpldStore, blockstore.Blockstore) {
 
-	require := require.New(t)
+	require := req.New(t)
 
 	cst, pool, fakeActorCodeCid := sharedSetupInitial()
 	vms := th.VMStorage()
@@ -134,8 +134,8 @@ func sharedSetup(t *testing.T, mockSigner types.MockSigner) (
 
 // TODO this test belongs in core, it calls ApplyMessages
 func TestApplyMessagesForSuccessTempAndPermFailures(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+	assert := ast.New(t)
+	require := req.New(t)
 	vms := th.VMStorage()
 
 	mockSigner, _ := setupSigner()
@@ -191,8 +191,8 @@ func TestApplyMessagesForSuccessTempAndPermFailures(t *testing.T) {
 }
 
 func TestGenerateMultiBlockTipSet(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+	assert := ast.New(t)
+	require := req.New(t)
 	ctx := context.Background()
 
 	CreatePoSTFunc := func() {}
@@ -237,8 +237,8 @@ func TestGenerateMultiBlockTipSet(t *testing.T) {
 
 // After calling Generate, do the new block and new state of the message pool conform to our expectations?
 func TestGeneratePoolBlockResults(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+	assert := ast.New(t)
+	require := req.New(t)
 	CreatePoSTFunc := func() {}
 
 	ctx := context.Background()
@@ -299,8 +299,8 @@ func TestGeneratePoolBlockResults(t *testing.T) {
 }
 
 func TestGenerateSetsBasicFields(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+	assert := ast.New(t)
+	require := req.New(t)
 
 	CreatePoSTFunc := func() {}
 
@@ -344,8 +344,8 @@ func TestGenerateSetsBasicFields(t *testing.T) {
 }
 
 func TestGenerateWithoutMessages(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+	assert := ast.New(t)
+	require := req.New(t)
 
 	CreatePoSTFunc := func() {}
 
@@ -380,8 +380,8 @@ func TestGenerateWithoutMessages(t *testing.T) {
 // If something goes wrong while generating a new block, even as late as when flushing it,
 // no block should be returned, and the message pool should not be pruned.
 func TestGenerateError(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+	assert := ast.New(t)
+	require := req.New(t)
 
 	CreatePoSTFunc := func() {}
 
@@ -456,9 +456,8 @@ func makeExplodingGetStateTree(st state.Tree) func(context.Context, types.TipSet
 }
 
 func setupSigner() (types.MockSigner, address.Address) {
-	seed := types.GenerateKeyInfoSeed()
-	ki := types.MustGenerateKeyInfo(10, seed)
-	mockSigner := types.NewMockSigner(ki)
+	mockSigner, _ := types.NewMockSignersAndKeyInfo(10)
+
 	blockSignerAddr := mockSigner.Addresses[len(mockSigner.Addresses)-1]
 	return mockSigner, blockSignerAddr
 }

@@ -11,8 +11,8 @@ import (
 	"github.com/filecoin-project/go-filecoin/state"
 	"github.com/filecoin-project/go-filecoin/testhelpers"
 	"github.com/filecoin-project/go-filecoin/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	ast "github.com/stretchr/testify/assert"
+	req "github.com/stretchr/testify/require"
 
 	"gx/ipfs/QmRXf2uUSdGSunRJsM9wXSUNVwLUGCY3So5fAs7h2CBJVf/go-hamt-ipld"
 	"gx/ipfs/QmS2aqUZLJp8kF1ihE5rvDGE5LvmKDPnx32w9Z1BW9xLV5/go-ipfs-blockstore"
@@ -25,7 +25,7 @@ import (
 )
 
 func TestNewExpected(t *testing.T) {
-	assert := assert.New(t)
+	assert := ast.New(t)
 	t.Run("a new Expected can be created", func(t *testing.T) {
 		cst, bstore, verifier := setupCborBlockstoreProofs()
 		ptv := testhelpers.NewTestPowerTableView(1, 5)
@@ -36,8 +36,8 @@ func TestNewExpected(t *testing.T) {
 
 // TestExpected_NewValidTipSet also tests validateBlockStructure.
 func TestExpected_NewValidTipSet(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+	assert := ast.New(t)
+	require := req.New(t)
 
 	ctx := context.Background()
 	cistore, bstore, verifier := setupCborBlockstoreProofs()
@@ -53,7 +53,7 @@ func TestExpected_NewValidTipSet(t *testing.T) {
 		pTipSet, err := exp.NewValidTipSet(ctx, []*types.Block{genesisBlock})
 		require.NoError(err)
 
-		blocks := makeSomeBlocks(pTipSet)
+		blocks := requireMakeBlocks(t, pTipSet)
 
 		tipSet, err := exp.NewValidTipSet(ctx, blocks)
 		assert.NoError(err)
@@ -86,11 +86,17 @@ func TestExpected_NewValidTipSet(t *testing.T) {
 	})
 }
 
-func makeSomeBlocks(pTipSet types.TipSet) []*types.Block {
+func requireMakeBlocks(t *testing.T, pTipSet types.TipSet) []*types.Block {
+	signer, ki := types.NewMockSignersAndKeyInfo(10)
+	minerAddr := address.NewForTestGetter()()
+
+	signerAddr, err := ki[0].Address()
+	req.NoError(t, err)
+
 	blocks := []*types.Block{
-		testhelpers.NewValidTestBlockFromTipSet(pTipSet, 1, address.MakeTestAddress("foo")),
-		testhelpers.NewValidTestBlockFromTipSet(pTipSet, 1, address.MakeTestAddress("bar")),
-		testhelpers.NewValidTestBlockFromTipSet(pTipSet, 1, address.MakeTestAddress("bazz")),
+		testhelpers.NewValidTestBlockFromTipSet(pTipSet, 1, minerAddr, signerAddr, signer),
+		testhelpers.NewValidTestBlockFromTipSet(pTipSet, 1, minerAddr, signerAddr, signer),
+		testhelpers.NewValidTestBlockFromTipSet(pTipSet, 1, minerAddr, signerAddr, signer),
 	}
 	return blocks
 }
@@ -100,8 +106,8 @@ func makeSomeBlocks(pTipSet types.TipSet) []*types.Block {
 // completely set up a valid state tree with a valid matching TipSet.  RunStateTransition is tested
 // with integration tests (see chain_daemon_test.go for example)
 func TestExpected_RunStateTransition_validateMining(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
+	assert := ast.New(t)
+	require := req.New(t)
 	ctx := context.Background()
 
 	cistore, bstore, verifier := setupCborBlockstoreProofs()
@@ -119,7 +125,7 @@ func TestExpected_RunStateTransition_validateMining(t *testing.T) {
 		pTipSet, err := exp.NewValidTipSet(ctx, []*types.Block{genesisBlock})
 		require.NoError(err)
 
-		blocks := makeSomeBlocks(pTipSet)
+		blocks := requireMakeBlocks(t, pTipSet)
 
 		tipSet, err := exp.NewValidTipSet(ctx, blocks)
 		require.NoError(err)
@@ -139,7 +145,7 @@ func TestExpected_RunStateTransition_validateMining(t *testing.T) {
 		pTipSet, err := exp.NewValidTipSet(ctx, []*types.Block{genesisBlock})
 		require.NoError(err)
 
-		blocks := makeSomeBlocks(pTipSet)
+		blocks := requireMakeBlocks(t, pTipSet)
 
 		tipSet, err := exp.NewValidTipSet(ctx, blocks)
 		require.NoError(err)
@@ -153,8 +159,15 @@ func TestExpected_RunStateTransition_validateMining(t *testing.T) {
 }
 
 func TestIsWinningTicket(t *testing.T) {
-	assert := assert.New(t)
+	assert := ast.New(t)
 
+	minerAddress := address.NewForTestGetter()()
+	ctx := context.Background()
+	d := datastore.NewMapDatastore()
+	bs := blockstore.NewBlockstore(d)
+	var st state.Tree
+
+	// Just do a sanity check here and do the rest of the checks by tesing CompareTicketPower directly.
 	t.Run("IsWinningTicket returns expected boolean + nil in non-error case", func(t *testing.T) {
 		cases := []struct {
 			ticket     byte
@@ -163,16 +176,6 @@ func TestIsWinningTicket(t *testing.T) {
 			wins       bool
 		}{
 			{0x00, 1, 5, true},
-			{0x30, 1, 5, true},
-			{0x40, 1, 5, false},
-			{0xF0, 1, 5, false},
-			{0x00, 5, 5, true},
-			{0x33, 5, 5, true},
-			{0x44, 5, 5, true},
-			{0xFF, 5, 5, true},
-			{0x00, 0, 5, false},
-			{0x33, 0, 5, false},
-			{0x44, 0, 5, false},
 			{0xFF, 0, 5, false},
 		}
 
@@ -199,12 +202,6 @@ func TestIsWinningTicket(t *testing.T) {
 		wins       bool
 	}{0x00, 1, 5, true}
 
-	minerAddress := address.NewForTestGetter()()
-	ctx := context.Background()
-	d := datastore.NewMapDatastore()
-	bs := blockstore.NewBlockstore(d)
-	var st state.Tree
-
 	t.Run("IsWinningTicket returns false + error when we fail to get total power", func(t *testing.T) {
 		ptv1 := NewFailingTestPowerTableView(testCase.myPower, testCase.totalPower)
 		ticket := [sha256.Size]byte{}
@@ -226,8 +223,37 @@ func TestIsWinningTicket(t *testing.T) {
 	})
 }
 
+func TestCompareTicketPower(t *testing.T) {
+	assert := ast.New(t)
+	cases := []struct {
+		ticket     byte
+		myPower    uint64
+		totalPower uint64
+		wins       bool
+	}{
+		{0x00, 1, 5, true},
+		{0x30, 1, 5, true},
+		{0x40, 1, 5, false},
+		{0xF0, 1, 5, false},
+		{0x00, 5, 5, true},
+		{0x33, 5, 5, true},
+		{0x44, 5, 5, true},
+		{0xFF, 5, 5, true},
+		{0x00, 0, 5, false},
+		{0x33, 0, 5, false},
+		{0x44, 0, 5, false},
+		{0xFF, 0, 5, false},
+	}
+	for _, c := range cases {
+		ticket := [65]byte{}
+		ticket[0] = c.ticket
+		res := consensus.CompareTicketPower(ticket[:], c.myPower, c.totalPower)
+		assert.Equal(c.wins, res, "%+v", c)
+	}
+}
+
 func TestCreateChallenge(t *testing.T) {
-	assert := assert.New(t)
+	assert := ast.New(t)
 
 	cases := []struct {
 		parentTickets  [][]byte

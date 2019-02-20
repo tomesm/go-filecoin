@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"context"
+	"fmt"
 	"github.com/filecoin-project/go-filecoin/actor"
 	"github.com/filecoin-project/go-filecoin/address"
 	"github.com/filecoin-project/go-filecoin/consensus"
@@ -9,6 +10,7 @@ import (
 	"github.com/filecoin-project/go-filecoin/state"
 	"github.com/filecoin-project/go-filecoin/types"
 	"github.com/filecoin-project/go-filecoin/vm"
+	"github.com/minio/blake2b-simd"
 	"github.com/stretchr/testify/require"
 	"gx/ipfs/QmS2aqUZLJp8kF1ihE5rvDGE5LvmKDPnx32w9Z1BW9xLV5/go-ipfs-blockstore"
 	"testing"
@@ -77,9 +79,9 @@ func (tv *TestPowerTableView) HasPower(ctx context.Context, st state.Tree, bstor
 
 // NewValidTestBlockFromTipSet creates a block for when proofs & power table don't need
 // to be correct
-func NewValidTestBlockFromTipSet(baseTipSet types.TipSet, height uint64, minerAddr address.Address) *types.Block {
+func NewValidTestBlockFromTipSet(baseTipSet types.TipSet, height uint64, minerAddr, signerAddr address.Address, signer types.Signer) *types.Block {
 	postProof := MakeRandomPoSTProofForTest()
-	ticket := consensus.CreateTicket(postProof, minerAddr)
+	ticket := createTicket(postProof, signerAddr, signer)
 
 	baseTsBlock := baseTipSet.ToSlice()[0]
 	stateRoot := baseTsBlock.StateRoot
@@ -190,4 +192,17 @@ func CreateAndApplyTestMessage(t *testing.T, st state.Tree, vms vm.StorageMap, t
 
 func newTestApplier() *consensus.DefaultProcessor {
 	return consensus.NewConfiguredProcessor(&TestSignedMessageValidator{}, &TestBlockRewarder{})
+}
+
+// This is currently to prevent an import cycle error with mining :(
+func createTicket(proof proofs.PoStProof, signerAddr address.Address, signer types.Signer) []byte {
+	buf := append(proof[:], signerAddr.Bytes()...)
+	h := blake2b.Sum256(buf)
+
+	ticket, err := signer.SignBytes(h[:], signerAddr)
+	if err != nil {
+		errMsg := fmt.Sprintf("SignBytes error in CreateTicket: %s", err.Error())
+		panic(errMsg)
+	}
+	return ticket
 }
